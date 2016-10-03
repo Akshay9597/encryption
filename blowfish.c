@@ -1,3 +1,5 @@
+/*Code taken from
+Author : Paul Kocher*/
 #include "blowfish.h"
 #define N               16
 static unsigned long F(BLOWFISH_CTX * ctx, unsigned long x);

@@ -1,5 +1,3 @@
-/*Code taken from
-Author : Paul Kocher*/
 #include "blowfish.h"
 #define N               16
 static unsigned long F(BLOWFISH_CTX * ctx, unsigned long x);
@@ -282,7 +280,7 @@ unsigned long F(BLOWFISH_CTX * ctx, unsigned long x) {
 	return y;
 }
 
-void Blowfish_Init(BLOWFISH_CTX * ctx, unsigned char *key, int keyLen) {
+void Blowfish_Init(BLOWFISH_CTX * ctx, char *key, int keyLen) {
 	int i, j, k;
 	unsigned long data, datal, datar;
 	for(i = 0; i < 4; i++) {
@@ -315,4 +313,3 @@ void Blowfish_Init(BLOWFISH_CTX * ctx, unsigned char *key, int keyLen) {
 		}
 	}
 }
-

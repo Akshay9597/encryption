@@ -1,28 +1,26 @@
-#ifndef __Blowfish
-#define __Blowfish
-#include "blowfish.c"
-#endif
-void Blowfish_Decrypt(BLOWFISH_CTX * ctx, unsigned long *xl, unsigned long *xr) {
-	unsigned long Xl;
-	unsigned long Xr;
-	unsigned long temp;
-	short i;
-	Xl = *xl;
-	Xr = *xr;
-	for(i = N + 1; i > 1; --i) {
-		Xl = Xl ^ ctx->P[i];
-		Xr = F(ctx, Xl) ^ Xr;
-		/* Exchange Xl and Xr */
-		temp = Xl;
-		Xl = Xr;
-		Xr = temp;
+#include "blowfish.h"
+#ifndef __DEC_
+#define __DEC_
+void Blowfish_Decrypt(BLOWFISH_CTX * ctx, unsigned char *xl, unsigned char *xr) {
+	unsigned char temp;
+	short i, j;
+	for(i = 16 + 1; i > 1; --i) {
+		for(j = 0; j < 8; ++j) {
+			xl[j] = xl[j] ^ ctx->P[i];
+			xr[j] = F(ctx, xl[j]) ^ xr[j];
+			/* Exchange Xl and Xr */
+			temp = xl[j];
+			xl[j] = xr[j];
+			xr[j] = temp;
+		}
 	}
 	/* Exchange Xl and Xr */
-	temp = Xl;
-	Xl = Xr;
-	Xr = temp;
-	Xr = Xr ^ ctx->P[1];
-	Xl = Xl ^ ctx->P[0];
-	*xl = Xl;
-	*xr = Xr;
+	for(j = 0; j < 8; ++j) {		
+		temp = xl[j];
+		xl[j] = xr[j];
+		xr[j] = temp;
+		xr[j] = xr[j] ^ ctx->P[1];
+		xl[j] = xl[j] ^ ctx->P[0];
+	}
 }
+#endif

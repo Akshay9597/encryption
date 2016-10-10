@@ -1,26 +1,24 @@
-#ifndef __Blowfish
-#define __Blowfish
-#include "blowfish.c"
-#endif
-void Blowfish_Encrypt(BLOWFISH_CTX * ctx, unsigned long *xl, unsigned long *xr) {
-	unsigned long Xl;
-	unsigned long Xr;
-	unsigned long temp;
-	short i;
-	Xl = *xl;
-	Xr = *xr;
-	for(i = 0; i < N; ++i) {	/*N=16 bcz we want this thing to run 16 times... Remember the algorithm */
-		Xl = Xl ^ ctx->P[i];
-		Xr = F(ctx, Xl) ^ Xr;
-		temp = Xl;
-		Xl = Xr;
-		Xr = temp;
+#include "blowfish.h"
+#ifndef __ENC_
+#define __ENC_
+void Blowfish_Encrypt(BLOWFISH_CTX * ctx, unsigned char *xl, unsigned char *xr) {
+	unsigned char temp;
+	short i, j;
+	for(i = 0; i < 16; ++i) {	/*N=16 bcz we want this thing to run 16 times... Remember the algorithm */
+		for(j = 0; j < 8; ++j) {
+			xl[j] = xl[j] ^ ctx->P[i];
+			xr[j] = F(ctx, xl[j]) ^ xr[j];
+			temp = xl[j];
+			xl[j] = xr[j];
+			xr[j] = temp;
+		}
 	}
-	temp = Xl;
-	Xl = Xr;
-	Xr = temp;
-	Xr = Xr ^ ctx->P[N];
-	Xl = Xl ^ ctx->P[N + 1];
-	*xl = Xl;
-	*xr = Xr;
+	for(j = 0; j < 8; ++j) {
+	temp = xl[j];
+	xl[j] = xr[j];
+	xr[j] = temp;
+	xr[j] = xr[j] ^ ctx->P[N];
+	xl[j] = xl[j] ^ ctx->P[N + 1];
+	}
 }
+#endif

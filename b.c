@@ -1,5 +1,4 @@
 #include "blowfish.h"
-#include "enc.c"
 static const unsigned long ORIG_P[18] = {
 	0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L,
 	0xA4093822L, 0x299F31D0L, 0x082EFA98L, 0xEC4E6C89L,
@@ -7,6 +6,7 @@ static const unsigned long ORIG_P[18] = {
 	0xC0AC29B7L, 0xC97C50DDL, 0x3F84D5B5L, 0xB5470917L,
 	0x9216D5D9L, 0x8979FB1BL
 };
+
 static const unsigned long ORIG_S[4][256] = {
 	{0xD1310BA6L, 0x98DFB5ACL, 0x2FFD72DBL, 0xD01ADFB7L,
 	 0xB8E1AFEDL, 0x6A267E96L, 0xBA7C9045L, 0xF12C7F99L,
@@ -263,9 +263,9 @@ static const unsigned long ORIG_S[4][256] = {
 	 0x90D4F869L, 0xA65CDEA0L, 0x3F09252DL, 0xC208E69FL,
 	 0xB74E6132L, 0xCE77E25BL, 0x578FDFE3L, 0x3AC372E6L}
 };
-unsigned long F(BLOWFISH_CTX * ctx, unsigned long x) {
-	unsigned short a, b, c, d;
-	unsigned long y;
+unsigned char F(BLOWFISH_CTX * ctx, unsigned char x) {
+	unsigned char a, b, c, d;
+	unsigned char y;
 	d = x & 0x00FF;
 	x >>= 8;
 	c = x & 0x00FF;
@@ -310,5 +310,47 @@ void Blowfish_Init(BLOWFISH_CTX * ctx, unsigned char *key, int keyLen) {
 			ctx->S[i][j] = datal;
 			ctx->S[i][j + 1] = datar;
 		}
+	}
+}
+void Blowfish_Encrypt(BLOWFISH_CTX * ctx, unsigned char *xl, unsigned char *xr) {
+	unsigned char temp;
+	short i, j;
+	for(i = 0; i < 16; ++i) {	/*N=16 bcz we want this thing to run 16 times... Remember the algorithm */
+		for(j = 0; j < 8; ++j) {
+			xl[j] = xl[j] ^ ctx->P[i];
+			xr[j] = F(ctx, xl[j]) ^ xr[j];
+			temp = xl[j];
+			xl[j] = xr[j];
+			xr[j] = temp;
+		}
+	}
+	for(j = 0; j < 8; ++j) {
+		temp = xl[j];
+		xl[j] = xr[j];
+		xr[j] = temp;
+		xr[j] = xr[j] ^ ctx->P[N];
+		xl[j] = xl[j] ^ ctx->P[N + 1];
+	}
+}
+void Blowfish_Decrypt(BLOWFISH_CTX * ctx, unsigned char *xl, unsigned char *xr) {
+	unsigned char temp;
+	short i, j;
+	for(i = 16 + 1; i > 1; --i) {
+		for(j = 0; j < 8; ++j) {
+			xl[j] = xl[j] ^ ctx->P[i];
+			xr[j] = F(ctx, xl[j]) ^ xr[j];
+			/* Exchange Xl and Xr */
+			temp = xl[j];
+			xl[j] = xr[j];
+			xr[j] = temp;
+		}
+	}
+	/* Exchange Xl and Xr */
+	for(j = 0; j < 8; ++j) {
+		temp = xl[j];
+		xl[j] = xr[j];
+		xr[j] = temp;
+		xr[j] = xr[j] ^ ctx->P[1];
+		xl[j] = xl[j] ^ ctx->P[0];
 	}
 }

@@ -1,5 +1,4 @@
 #include "blowfish.h"
-static unsigned long F(BLOWFISH_CTX * ctx, unsigned long x;)
 static const unsigned long ORIG_P[18] = {
 	0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L,
 	0xA4093822L, 0x299F31D0L, 0x082EFA98L, 0xEC4E6C89L,
@@ -282,7 +281,7 @@ unsigned long F(BLOWFISH_CTX * ctx, unsigned long x) {
 
 void Blowfish_Init(BLOWFISH_CTX * ctx, unsigned char *key, int keyLen) {
 	int i, j, k;
-	unsigned char data, datal, datar;
+	unsigned long data, datal, datar;
 	for(i = 0; i < 4; i++) {
 		for(j = 0; j < 256; j++)
 			ctx->S[i][j] = ORIG_S[i][j];

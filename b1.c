@@ -1,6 +1,5 @@
 #include "b1.h"
 #define N               16
-static unsigned long F(BLOWFISH_CTX * ctx, unsigned long x);
 static const unsigned long ORIG_P[16 + 2] = {
 	0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L,
 	0xA4093822L, 0x299F31D0L, 0x082EFA98L, 0xEC4E6C89L,

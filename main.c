@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 			for(i = retstrlen - 1; i < 16; i++) {
 				data[i] = ' ';
 			}
-			data[16] = '\n';
+		//	data[16] = '\n';
 		}
 		//For the last 16 bytes if it reaches end it is taking '\n'... But we don't want.
 		//printf("\n");

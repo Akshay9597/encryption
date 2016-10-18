@@ -1,6 +1,6 @@
-all : main.o b.o
+all : main.o blowfish.o
 	gcc main.o b.o -Wall -o blowfish
 main.o : main.c blowfish.h
 	gcc main.c -c
-b.o : b.c blowfish.h
-	gcc b.c -c
+blowfish.o : blowfish.c blowfish.h
+	gcc blowfish.c -c

@@ -1,13 +1,8 @@
 /*Read 16 bytes and divide into 2 halves*/
-/*Make key strong... Try to type password again if it is not strong .... i.e check for Capitals and symbols*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "blowfish.h"
 int main(int argc, char *argv[]) {
 	/*-----------HELP----------------*/
@@ -19,13 +14,15 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	/*-----------HELP----------------*/
-	unsigned int datalen;
 	int keylen, flag = 0;
-	char k;
+	char k, tmp;
 	FILE *sfile, *tfile;
-	unsigned int retstrlen;
-	unsigned char key[56], data[17], l[8], r[8];
+	unsigned int retstrlen, retstrlen1;
+	unsigned char key[56];
+	unsigned long l , r;
+	unsigned char *cr, *cl;
 	short i = -1;
+//	short count1, count2;
 	if(argc != 5 ) {
 		errno = EINVAL;
 		perror("./blowfish enc/dec <key> <source file> <target file> : ");
@@ -34,7 +31,8 @@ int main(int argc, char *argv[]) {
 	strcpy(key, argv[2]);
 	keylen = strlen(key);
 	/*******Strong key*********/
-	if(!strcmp(argv[1], "enc")) {
+	while((!strcmp(argv[1], "enc")) && (flag == 0)) {
+		i = 0;
 		while(++i < keylen) {
 			if(key[i] < 97 || key[i] > 122) {
 				flag = 1;
@@ -44,10 +42,11 @@ int main(int argc, char *argv[]) {
 		if(flag == 0) {
 			printf("Key is not strong enough.\nDo you wish to continue y/n\n");
 			k = getchar();
+			tmp = getchar();
 			if(k == 'n')
-				exit(1);
-/*			if(k == 'y')
-				scanf("%s", key);*/
+				scanf("%s", key);
+			else if(k == 'y')
+				break;
 		}
 	}
 	/*******Strong key*********/
@@ -64,36 +63,44 @@ int main(int argc, char *argv[]) {
 	}
 	BLOWFISH_CTX ctx;
 	Blowfish_Init(&ctx, key, keylen);
+	//Even if retstrlen and retstrlen1 is somentimes 0 it contains data
 	while(!feof(sfile)) {		//Main loop
-		retstrlen = fread(data, sizeof(char), 16, sfile);		
-		//I have to do padding if datalen != 16... Datalen is != 16 if it reaches at the end.
-		//printf("\n%c\t", data[retstrlen - 1]);
-		if(retstrlen != 16) {
-			for(i = retstrlen - 1; i < 16; i++) {
-				data[i] = ' ';
-			}
-		//	data[16] = '\n';
+		l = r = 0X00000000;
+//		count1 = count2 = 0;
+		retstrlen1 = fread(&l, sizeof(unsigned long), 1, sfile);
+		retstrlen = fread(&r, sizeof(unsigned long), 1, sfile);
+		i = 0;
+//		cl = &l;
+//		cr = &r;
+/*		while(i++ < 8) {
+			if(cl[i - 1])
+				count1++;
 		}
-		//For the last 16 bytes if it reaches end it is taking '\n'... But we don't want.
-		//printf("\n");
-	/*	for(i = 0; i < 16; i++) {
-			printf("%c", data[i]);
+		i = 0;
+		while(i++ < 8) {
+			if(cl[i - 1])
+				count2++;
 		}*/
-		for(i = 0; i < 8; i++) {		//Dividing into 8 bytes array. 2 halves
-			l[i] = data[i];
-			r[i] = data[i + 8];
-		}
+	//	printf("\n%d %d", retstrlen1, retstrlen);
+	//	if(retstrlen != 1)
+	//		r = 0X00000000;
 		if(!strcmp(argv[1], "enc"))
-			Blowfish_Encrypt(&ctx, l, r);
+			Blowfish_Encrypt(&ctx, &l, &r);
 		else
-			Blowfish_Decrypt(&ctx, l, r);
-		//fputs() writes data without '\0'
-		for(i = 0; i < 8; i++)
-			data[i] = l[i];
-		for(i = 0; i < 8; i++)
-			data[i + 8] = r[i];
-		data[16] = '\0';
-		fputs(data, tfile);
+			Blowfish_Decrypt(&ctx, &l, &r);
+		//printf("%lu ", r);
+		cl = &l;
+		cr = &r;
+		for(i = 0; i < 8; i++) {
+//			if(cl[i])
+				fprintf(tfile, "%c", cl[i]);
+		}
+//		if(r == 0X00000000)	//Padding part
+//			break;
+		for(i = 0; i < 8; i++) {
+//			if(cr[i])
+				fprintf(tfile, "%c", cr[i]);
+		}
 	}
 	fclose(sfile);
 	fclose(tfile);

@@ -1,12 +1,19 @@
+/*
+    * Author     :  Paul Kocher
+     * E-mail     :  pck@netcom.com
+      * Date       :  1997
+       * Description:  C implementation of the Blowfish algorithm.
+        */
 #include "blowfish.h"
-static const unsigned long ORIG_P[18] = {
+#define N               16
+static unsigned long F(BLOWFISH_CTX * ctx, unsigned long x);
+static const unsigned long ORIG_P[16 + 2] = {
 	0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L,
 	0xA4093822L, 0x299F31D0L, 0x082EFA98L, 0xEC4E6C89L,
 	0x452821E6L, 0x38D01377L, 0xBE5466CFL, 0x34E90C6CL,
 	0xC0AC29B7L, 0xC97C50DDL, 0x3F84D5B5L, 0xB5470917L,
 	0x9216D5D9L, 0x8979FB1BL
 };
-
 static const unsigned long ORIG_S[4][256] = {
 	{0xD1310BA6L, 0x98DFB5ACL, 0x2FFD72DBL, 0xD01ADFB7L,
 	 0xB8E1AFEDL, 0x6A267E96L, 0xBA7C9045L, 0xF12C7F99L,
@@ -165,6 +172,7 @@ static const unsigned long ORIG_S[4][256] = {
 	 0xD0127845L, 0x95B794FDL, 0x647D0862L, 0xE7CCF5F0L,
 	 0x5449A36FL, 0x877D48FAL, 0xC39DFD27L, 0xF33E8D1EL,
 	 0x0A476341L, 0x992EFF74L, 0x3A6F6EABL, 0xF4F8FD37L,
+	 0xA812DC60L, 0xA1EBDDF8L, 0x991BE14CL, 0xDB6E6B0DL,
 	 0xC67B5510L, 0x6D672C37L, 0x2765D43BL, 0xDCD0E804L,
 	 0xF1290DC7L, 0xCC00FFA3L, 0xB5390F92L, 0x690FED0BL,
 	 0x667B9FFBL, 0xCEDB7D9CL, 0xA091CF0BL, 0xD9155EA3L,
@@ -186,6 +194,7 @@ static const unsigned long ORIG_S[4][256] = {
 	 0xB90BACE1L, 0xBB8205D0L, 0x11A86248L, 0x7574A99EL,
 	 0xB77F19B6L, 0xE0A9DC09L, 0x662D09A1L, 0xC4324633L,
 	 0xE85A1F02L, 0x09F0BE8CL, 0x4A99A025L, 0x1D6EFE10L,
+	 0x1AB93D1DL, 0x0BA5A4DFL, 0xA186F20FL, 0x2868F169L,
 	 0xDCB7DA83L, 0x573906FEL, 0xA1E2CE9BL, 0x4FCD7F52L,
 	 0x50115E01L, 0xA70683FAL, 0xA002B5C4L, 0x0DE6D027L,
 	 0x9AF88C27L, 0x773F8641L, 0xC3604C06L, 0x61A806B5L,
@@ -264,7 +273,7 @@ static const unsigned long ORIG_S[4][256] = {
 	 0xB74E6132L, 0xCE77E25BL, 0x578FDFE3L, 0x3AC372E6L}
 };
 unsigned long F(BLOWFISH_CTX * ctx, unsigned long x) {
-	unsigned long a, b, c, d;
+	unsigned short a, b, c, d;
 	unsigned long y;
 	d = x & 0x00FF;
 	x >>= 8;
@@ -278,7 +287,52 @@ unsigned long F(BLOWFISH_CTX * ctx, unsigned long x) {
 	y = y + ctx->S[3][d];
 	return y;
 }
-
+void Blowfish_Encrypt(BLOWFISH_CTX * ctx, unsigned long *xl, unsigned long *xr) {
+	unsigned long Xl;
+	unsigned long Xr;
+	unsigned long temp;
+	short i;
+	Xl = *xl;
+	Xr = *xr;
+	for(i = 0; i < N; ++i) {	/*N=16 bcz we want this thing to run 16 times... Remember the algorithm */
+		Xl = Xl ^ ctx->P[i];
+		Xr = F(ctx, Xl) ^ Xr;
+		temp = Xl;
+		Xl = Xr;
+		Xr = temp;
+	}
+	temp = Xl;
+	Xl = Xr;
+	Xr = temp;
+	Xr = Xr ^ ctx->P[N];
+	Xl = Xl ^ ctx->P[N + 1];
+	*xl = Xl;
+	*xr = Xr;
+}
+void Blowfish_Decrypt(BLOWFISH_CTX * ctx, unsigned long *xl, unsigned long *xr) {
+	unsigned long Xl;
+	unsigned long Xr;
+	unsigned long temp;
+	short i;
+	Xl = *xl;
+	Xr = *xr;
+	for(i = N + 1; i > 1; --i) {
+		Xl = Xl ^ ctx->P[i];
+		Xr = F(ctx, Xl) ^ Xr;
+		/* Exchange Xl and Xr */
+		temp = Xl;
+		Xl = Xr;
+		Xr = temp;
+	}
+	/* Exchange Xl and Xr */
+	temp = Xl;
+	Xl = Xr;
+	Xr = temp;
+	Xr = Xr ^ ctx->P[1];
+	Xl = Xl ^ ctx->P[0];
+	*xl = Xl;
+	*xr = Xr;
+}
 void Blowfish_Init(BLOWFISH_CTX * ctx, unsigned char *key, int keyLen) {
 	int i, j, k;
 	unsigned long data, datal, datar;
@@ -310,51 +364,5 @@ void Blowfish_Init(BLOWFISH_CTX * ctx, unsigned char *key, int keyLen) {
 			ctx->S[i][j] = datal;
 			ctx->S[i][j + 1] = datar;
 		}
-	}
-}
-void Blowfish_Encrypt(BLOWFISH_CTX * ctx, unsigned char *xl, unsigned char *xr) {
-	unsigned char temp;
-	short i, j;
-	for(i = 0; i < 16; ++i) {	/*N=16 bcz we want this thing to run 16 times... Remember the algorithm */
-		for(j = 0; j < 8; ++j) {
-			xl[j] = xl[j] ^ ctx->P[i];
-			xr[j] = F(ctx, xl[j]) ^ xr[j];	
-			temp = xl[j];
-			xl[j] = xr[j];
-			xr[j] = temp;
-		}
-	}
-	for(j = 0; j < 8; ++j) {
-		temp = xl[j];
-		xl[j] = xr[j];
-		xr[j] = temp;
-	}
-	//I want to take one byte at a time of P[N] or change P[N] to char values 
-	for(j = 0; j < 8; ++j) {	
-		xr[j] = xr[j] ^ ctx->P[N];
-		xl[j] = xl[j] ^ ctx->P[N + 1];
-
-	}
-}
-void Blowfish_Decrypt(BLOWFISH_CTX * ctx, unsigned char *xl, unsigned char *xr) {
-	unsigned char temp;
-	short i, j;
-	for(i = 16 + 1; i > 1; --i) {
-		for(j = 0; j < 8; ++j) {
-			xl[j] = xl[j] ^ ctx->P[i];
-			xr[j] = F(ctx, xl[j]) ^ xr[j];
-			/* Exchange Xl and Xr */
-			temp = xl[j];
-			xl[j] = xr[j];
-			xr[j] = temp;
-		}
-	}
-	/* Exchange Xl and Xr */
-	for(j = 0; j < 8; ++j) {
-		temp = xl[j];
-		xl[j] = xr[j];
-		xr[j] = temp;
-		xr[j] = xr[j] ^ ctx->P[1];
-		xl[j] = xl[j] ^ ctx->P[0];
 	}
 }

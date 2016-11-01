@@ -4,12 +4,13 @@
 # encryption<br>
 blowfish encryption<br>
 usage:<br>
-enc : ./blowfish enc key input_file output_file<br>
-dec : ./blowfish dec key input_file output_file<br>
+enc : ./project enc key [source file1] [output_file1] [source file2] [output file2].........[OPTIONS]<br>
+dec : ./project dec key [source file1] [output_file1] [source file2] [output file2].........[OPTIONS]<br>
+Options :<br>
+-c : Creates output files<br>
+Usage : ./project enc/dec key [source file1] [source file2].....-c<br>
+-d : Deletes source files<br>
+Usage : ./project enc/dec key [source file1] [output file1] [source file2] [output file2].....-d<br>
+-cd : Creates output files and deletes source files<br>
+Usage : ./project enc/dec key [source file1] [source file2].....-cd<br>
 Checks if the password is strong and recommends user to have a strong password(4 - 56bytes).<br>
-Reads 16 bytes from inputfile and calls Blowfish_Encrypt or Blowfish_Decrypt according to input by user (argv[1]).<br>
-Padding :: If not read 16 bytes then adds ' '(space) and completes 16 bytes.<br>
-Not completed :<br>
-Checking if password is valid. If it is not valid then it will not even decrypt it.<br>
-# compression<br>
-Not implemented yet.<br>

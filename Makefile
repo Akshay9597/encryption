@@ -4,7 +4,7 @@ main.o : main.c blowfish.h
 	gcc main.c -c
 blowfish.o : blowfish.c blowfish.h
 	gcc blowfish.c -c
-clear : *.txt
+cleartxt : *.txt
 	rm -rv *.txt
 clearenc : *.enc
 	rm -rv *.enc
